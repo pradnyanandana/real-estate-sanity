@@ -16,7 +16,7 @@ A full-stack application built with **Next.js**, **Sanity CMS**, and **Tailwind 
 
 ## 🧱 Tech Stack
 
-- **Frontend:** Next.js 14, React, Tailwind CSS
+- **Frontend:** Next.js 15, React, Tailwind CSS
 - **Backend:** Sanity CMS (Headless)
 - **Image Uploads:** Sanity Assets API
 
