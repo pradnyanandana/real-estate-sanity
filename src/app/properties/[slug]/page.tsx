@@ -27,9 +27,9 @@ const PROPERTY_QUERY = `*[
 const options = { next: { revalidate: 0 } };
 
 interface PropertyPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
