@@ -27,7 +27,7 @@ A full-stack application built with **Next.js**, **Sanity CMS**, and **Tailwind 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/property-app.git
+git clone https://github.com/pradnyanandana/real-estate-sanity.git
 cd property-app
 ```
 
