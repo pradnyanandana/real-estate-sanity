@@ -55,6 +55,106 @@ You can find these values in your Sanity project dashboard under **Settings → 
 
 ---
 
+## 🧩 Sanity Studio Setup
+
+### 1. Install Sanity CLI
+
+```bash
+npm install -g sanity
+```
+
+### 2. Create a New Sanity Project
+
+```bash
+sanity init
+```
+
+- **Project name**: property-platform  
+- **Dataset**: production (default)  
+- **Output path**: `sanity/`  
+- **Template**: Clean project with schema
+
+### 3. Add the `property` schema
+
+Create a new file: `sanity/schemas/property.ts`
+
+```ts
+import {defineField, defineType} from 'sanity'
+
+export const propertyType = defineType({
+  name: 'property',
+  title: 'Property',
+  type: 'document',
+  fields: [
+    defineField({
+      name: 'title',
+      title: 'Title',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: {source: 'title', maxLength: 96},
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'location',
+      title: 'Location',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'price',
+      title: 'Price',
+      type: 'number',
+      validation: (rule) => rule.required().min(0),
+    }),
+    defineField({
+      name: 'image',
+      title: 'Image',
+      type: 'image',
+      options: {
+        hotspot: true,
+      },
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'description',
+      title: 'Description',
+      type: 'array',
+      of: [{type: 'block'}],
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'isPublished',
+      title: 'Published?',
+      type: 'boolean',
+      initialValue: false,
+    }),
+  ],
+})
+```
+
+Then update `sanity/schemas/index.ts`:
+
+```ts
+import property from './property'
+export const schemaTypes = [property]
+```
+
+### 4. Start Sanity Studio
+
+```bash
+cd sanity
+sanity dev
+```
+
+Studio will run at: [http://localhost:3333](http://localhost:3333)
+
+---
+
 ## 📆 Start Development Server
 
 ```bash
@@ -75,7 +175,7 @@ App will be running at: [http://localhost:3000](http://localhost:3000)
 │   └── index.tsx             # Home page (listings)
 ├── components/
 │   └── PropertyForm.tsx      # Form component for create/edit
-├── sanity/                   # Sanity client config
+├── sanity/                   # Sanity Studio & schema files
 ├── public/
 ├── styles/
 └── .env.local                # Environment variables
