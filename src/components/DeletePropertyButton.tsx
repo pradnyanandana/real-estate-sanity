@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { client } from "@/sanity/client";
 
 interface DeletePropertyButtonProps {
   propertyId: string;
@@ -13,7 +11,6 @@ export default function DeletePropertyButton({
   propertyId,
   propertyTitle,
 }: DeletePropertyButtonProps) {
-  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -88,7 +85,7 @@ export default function DeletePropertyButton({
             </div>
 
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{propertyTitle}"? This action
+              Are you sure you want to delete &quot;{propertyTitle}&quot;? This action
               cannot be undone.
             </p>
 

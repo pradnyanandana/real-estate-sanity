@@ -158,7 +158,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
           Interested in this property?
         </h3>
         <p className="text-gray-700 mb-4">
-          Contact us for more information about "{property.title}" in{" "}
+          Contact us for more information about &quot;{property.title}&quot; in{" "}
           {property.location}.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
