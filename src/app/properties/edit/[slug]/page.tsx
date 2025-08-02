@@ -1,5 +1,3 @@
-// app/properties/edit/[id]/page.tsx
-
 import { notFound } from "next/navigation";
 import { client } from "@/sanity/client";
 import { SanityDocument } from "next-sanity";
@@ -25,9 +23,9 @@ const PROPERTY_QUERY = `*[
 const options = { next: { revalidate: 0 } };
 
 interface Props {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function EditPropertyPage({ params }: Props) {
