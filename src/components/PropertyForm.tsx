@@ -9,9 +9,11 @@ import Image from "next/image";
 import {
   defineSchema,
   EditorProvider,
-  PortableTextChild,
   PortableTextEditable,
+  useEditor,
   type PortableTextBlock as EditorPortableTextBlock,
+  type RenderDecoratorFunction,
+  type RenderStyleFunction,
 } from "@portabletext/editor";
 import { EventListenerPlugin } from "@portabletext/editor/plugins";
 import { nanoid } from "nanoid";
@@ -177,16 +179,41 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
     })) as EditorPortableTextBlock[];
   };
 
+  // Enhanced schema with more rich text options
   const schemaDefinition = defineSchema({
-    decorators: [{ name: "strong" }, { name: "em" }, { name: "underline" }],
-    styles: [
-      { name: "normal" },
-      { name: "h1" },
-      { name: "h2" },
-      { name: "blockquote" },
+    decorators: [
+      { name: "strong", title: "Bold" },
+      { name: "em", title: "Italic" },
+      { name: "underline", title: "Underline" },
+      { name: "strike-through", title: "Strike Through" },
+      { name: "code", title: "Code" },
     ],
-    lists: [{ name: "bullet" }, { name: "number" }],
-    annotations: [],
+    styles: [
+      { name: "normal", title: "Normal" },
+      { name: "h1", title: "Heading 1" },
+      { name: "h2", title: "Heading 2" },
+      { name: "h3", title: "Heading 3" },
+      { name: "h4", title: "Heading 4" },
+      { name: "blockquote", title: "Quote" },
+    ],
+    lists: [
+      { name: "bullet", title: "Bullet List" },
+      { name: "number", title: "Numbered List" },
+    ],
+    annotations: [
+      {
+        name: "link",
+        title: "Link",
+        type: "object",
+        fields: [
+          {
+            name: "href",
+            type: "string",
+            title: "URL",
+          },
+        ],
+      },
+    ],
     blockObjects: [],
     inlineObjects: [],
   });
@@ -196,6 +223,144 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
       ...prev,
       description: value as PortableTextBlock[],
     }));
+  };
+
+  // Render functions to display formatting in the editor
+  const renderDecorator: RenderDecoratorFunction = (props) => {
+    if (props.value === "strong") {
+      return <strong>{props.children}</strong>;
+    }
+    if (props.value === "em") {
+      return <em>{props.children}</em>;
+    }
+    if (props.value === "underline") {
+      return <u>{props.children}</u>;
+    }
+    if (props.value === "strike-through") {
+      return <s>{props.children}</s>;
+    }
+    if (props.value === "code") {
+      return <code className="bg-gray-100 px-1 rounded text-sm">{props.children}</code>;
+    }
+    return <>{props.children}</>;
+  };
+
+  const renderStyle: RenderStyleFunction = (props) => {
+    if (props.schemaType.value === "h1") {
+      return <h1 className="text-2xl font-bold">{props.children}</h1>;
+    }
+    if (props.schemaType.value === "h2") {
+      return <h2 className="text-xl font-bold">{props.children}</h2>;
+    }
+    if (props.schemaType.value === "h3") {
+      return <h3 className="text-lg font-bold">{props.children}</h3>;
+    }
+    if (props.schemaType.value === "h4") {
+      return <h4 className="text-base font-bold">{props.children}</h4>;
+    }
+    if (props.schemaType.value === "blockquote") {
+      return <blockquote className="border-l-4 border-gray-300 pl-4 italic">{props.children}</blockquote>;
+    }
+    return <>{props.children}</>;
+  };
+
+  // Toolbar component for rich text formatting that uses current PortableText editor API
+  const RichTextToolbar = () => {
+    const editor = useEditor();
+
+    const toggleDecorator = (decorator: string) => {
+      editor.send({
+        type: 'decorator.toggle',
+        decorator: decorator,
+      });
+      editor.send({ type: 'focus' });
+    };
+
+    // Note: In the current API, we can't easily check if a decorator is active
+    // You might need to track this state separately or use editor selection info
+
+    return (
+      <div className="border-b border-gray-200 p-3 bg-gray-50">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Text Style Buttons */}
+          <div className="flex items-center border-r border-gray-300 pr-2 mr-2">
+            <button
+              type="button"
+              className="p-1.5 text-gray-600 hover:bg-gray-200 rounded transition-colors"
+              title="Bold (Ctrl+B)"
+              onClick={() => toggleDecorator("strong")}
+            >
+              <svg
+                width="16px"
+                height="16px"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+              >
+                <path
+                  fill="currentColor"
+                  fillRule="evenodd"
+                  d="M4 1a1 1 0 00-1 1v16a1 1 0 001 1v-1 1h8a5 5 0 001.745-9.687A5 5 0 0010 1H4zm6 8a3 3 0 100-6H5v6h5zm-5 2v6h7a3 3 0 100-6H5z"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="p-1.5 text-gray-600 hover:bg-gray-200 rounded transition-colors"
+              title="Italic (Ctrl+I)"
+              onClick={() => toggleDecorator("em")}
+            >
+              <svg
+                width="22px"
+                height="22px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g id="Edit / Italic">
+                  <path
+                    id="Vector"
+                    d="M8 19H10M10 19H12M10 19L14 5M12 5H14M14 5H16"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="p-1.5 text-gray-600 hover:bg-gray-200 rounded transition-colors"
+              title="Underline (Ctrl+U)"
+              onClick={() => toggleDecorator("underline")}
+            >
+              <svg
+                width="22px"
+                height="22px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7 4V11C7 13.7614 9.23858 16 12 16C14.7614 16 17 13.7614 17 11V4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M5 20H19"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -294,13 +459,14 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
           >
             Description
           </label>
-          <div className="border border-gray-300 rounded-md relative">
+          <div className="border border-gray-300 rounded-md overflow-hidden">
             <EditorProvider
               initialConfig={{
                 schemaDefinition,
                 initialValue: ensureKeys(formData.description),
               }}
             >
+              <RichTextToolbar />
               <EventListenerPlugin
                 on={(event) => {
                   if (event.type === "mutation") {
@@ -312,19 +478,30 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
               />
               <div className="portable-text-editor">
                 <PortableTextEditable
-                  placeholder="Enter property description"
+                  placeholder="Enter property description. Use the toolbar above for formatting options..."
+                  renderDecorator={renderDecorator}
+                  renderStyle={renderStyle}
+                  renderBlock={(props) => <div>{props.children}</div>}
+                  renderListItem={(props) => <>{props.children}</>}
                   style={{
-                    minHeight: "150px",
-                    padding: "12px",
+                    minHeight: "200px",
+                    padding: "16px",
                     border: "none",
                     outline: "none",
                     fontSize: "14px",
-                    lineHeight: "1.5",
-                    position: "relative",
+                    lineHeight: "1.6",
+                    fontFamily:
+                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
                   }}
                 />
               </div>
             </EditorProvider>
+          </div>
+          <div className="mt-2 text-sm text-gray-500">
+            Rich text editor supports headings, lists, links, and text
+            formatting. Press{" "}
+            <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd>{" "}
+            for new paragraphs.
           </div>
         </div>
       </div>
