@@ -31,27 +31,9 @@ export async function POST(req: NextRequest) {
       },
       location: body.location,
       price: parseInt(body.price),
-      description: [
-        {
-          _type: "block",
-          children: [
-            {
-              _type: "span",
-              text: body.description || "",
-            },
-          ],
-        },
-      ],
+      image: body.image,
+      description: body.description,
       isPublished: true,
-      ...(body.imageAssetId && {
-        image: {
-          _type: "image",
-          asset: {
-            _type: "reference",
-            _ref: body.imageAssetId,
-          },
-        },
-      }),
     };
 
     const created = await client.create(newDoc);

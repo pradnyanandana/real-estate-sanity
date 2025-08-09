@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { type SanityDocument } from "next-sanity";
+import { PortableText, type SanityDocument } from "next-sanity";
 import { urlFor } from "@/sanity/lib/image";
 import { client } from "@/sanity/client";
 import DeletePropertyButton from "@/components/DeletePropertyButton";
@@ -107,9 +107,9 @@ export default async function PropertiesPage() {
                   </div>
 
                   {property.description && property.description.length > 0 && (
-                    <p className="text-gray-600 text-sm line-clamp-2">
-                      {property.description[0]?.children?.[0]?.text || ""}
-                    </p>
+                    <div className="text-gray-600 text-sm line-clamp-2">
+                      <PortableText value={property.description} />
+                    </div>
                   )}
                 </div>
               </Link>

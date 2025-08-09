@@ -47,17 +47,7 @@ export async function PUT(
         title,
         location,
         price,
-        description: [
-          {
-            _type: "block",
-            children: [
-              {
-                _type: "span",
-                text: description,
-              },
-            ],
-          },
-        ],
+        description,
         image,
       })
       .commit();

@@ -2,13 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SanityDocument } from "next-sanity";
+import { PortableTextBlock, SanityDocument } from "next-sanity";
 import Link from "next/link";
+import { urlFor } from "@/sanity/lib/image";
+import Image from "next/image";
+import {
+  defineSchema,
+  EditorProvider,
+  PortableTextChild,
+  PortableTextEditable,
+  type PortableTextBlock as EditorPortableTextBlock,
+} from "@portabletext/editor";
+import { EventListenerPlugin } from "@portabletext/editor/plugins";
+import { nanoid } from "nanoid";
 
 interface PropertyFormProps {
   mode: "add" | "edit";
   initialData?: SanityDocument;
 }
+
+interface PortableTextSpanChild {
+  _type: "span";
+  _key?: string;
+  text: string;
+  marks: string[];
+}
+
+interface PortableTextObjectChild {
+  _type: string;
+  _key?: string;
+  [key: string]: unknown;
+}
+
+type PortableTextChildUnion = PortableTextSpanChild | PortableTextObjectChild;
 
 export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
   const router = useRouter();
@@ -18,7 +44,7 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
     title: initialData?.title || "",
     location: initialData?.location || "",
     price: initialData?.price || "",
-    description: initialData?.description?.[0]?.children?.[0]?.text || "",
+    description: (initialData?.description as PortableTextBlock[]) || [],
     image: initialData?.image || null,
   });
 
@@ -100,6 +126,78 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
     }
   };
 
+  const ensureKeys = (
+    blocks: PortableTextBlock[]
+  ): EditorPortableTextBlock[] => {
+    if (!blocks || blocks.length === 0) {
+      return [
+        {
+          _type: "block",
+          _key: nanoid(),
+          style: "normal",
+          markDefs: [],
+          children: [
+            {
+              _type: "span",
+              _key: nanoid(),
+              text: "",
+              marks: [],
+            },
+          ],
+        },
+      ] as EditorPortableTextBlock[];
+    }
+
+    return blocks.map((block) => ({
+      ...block,
+      _key: block._key || nanoid(),
+      _type: "block" as const,
+      style: block.style || "normal",
+      markDefs: block.markDefs || [],
+      children: (block.children || []).map((child) => {
+        const portableChild = child as PortableTextChildUnion;
+
+        if (portableChild._type === "span") {
+          const spanChild = portableChild as PortableTextSpanChild;
+          return {
+            ...spanChild,
+            _key: spanChild._key || nanoid(),
+            _type: "span" as const,
+            text: spanChild.text || "",
+            marks: spanChild.marks || [],
+          };
+        } else {
+          const objectChild = portableChild as PortableTextObjectChild;
+          return {
+            ...objectChild,
+            _key: objectChild._key || nanoid(),
+          };
+        }
+      }),
+    })) as EditorPortableTextBlock[];
+  };
+
+  const schemaDefinition = defineSchema({
+    decorators: [{ name: "strong" }, { name: "em" }, { name: "underline" }],
+    styles: [
+      { name: "normal" },
+      { name: "h1" },
+      { name: "h2" },
+      { name: "blockquote" },
+    ],
+    lists: [{ name: "bullet" }, { name: "number" }],
+    annotations: [],
+    blockObjects: [],
+    inlineObjects: [],
+  });
+
+  const handleDescriptionChange = (value: EditorPortableTextBlock[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: value as PortableTextBlock[],
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -178,14 +276,13 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
           {uploading && (
             <p className="text-sm text-gray-500 mt-1">Uploading image...</p>
           )}
-          {formData.image?.asset?._ref && (
-            <img
-              src={`https://cdn.sanity.io/images/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/${process.env.NEXT_PUBLIC_SANITY_DATASET}/${formData.image.asset._ref
-                .replace("image-", "")
-                .replace("-jpg", ".jpg")
-                .replace("-png", ".png")}`}
+          {formData.image && (
+            <Image
+              src={urlFor(formData.image).width(400).height(300).url()}
               alt="Uploaded Preview"
               className="mt-3 rounded shadow w-full max-w-xs"
+              width={400}
+              height={300}
             />
           )}
         </div>
@@ -197,15 +294,38 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
           >
             Description
           </label>
-          <textarea
-            id="description"
-            name="description"
-            rows={4}
-            value={formData.description}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter property description"
-          />
+          <div className="border border-gray-300 rounded-md relative">
+            <EditorProvider
+              initialConfig={{
+                schemaDefinition,
+                initialValue: ensureKeys(formData.description),
+              }}
+            >
+              <EventListenerPlugin
+                on={(event) => {
+                  if (event.type === "mutation") {
+                    handleDescriptionChange(
+                      event.value as EditorPortableTextBlock[]
+                    );
+                  }
+                }}
+              />
+              <div className="portable-text-editor">
+                <PortableTextEditable
+                  placeholder="Enter property description"
+                  style={{
+                    minHeight: "150px",
+                    padding: "12px",
+                    border: "none",
+                    outline: "none",
+                    fontSize: "14px",
+                    lineHeight: "1.5",
+                    position: "relative",
+                  }}
+                />
+              </div>
+            </EditorProvider>
+          </div>
         </div>
       </div>
 
