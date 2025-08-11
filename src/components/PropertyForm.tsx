@@ -240,7 +240,11 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
       return <s>{props.children}</s>;
     }
     if (props.value === "code") {
-      return <code className="bg-gray-100 px-1 rounded text-sm">{props.children}</code>;
+      return (
+        <code className="bg-gray-100 px-1 rounded text-sm">
+          {props.children}
+        </code>
+      );
     }
     return <>{props.children}</>;
   };
@@ -259,7 +263,11 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
       return <h4 className="text-base font-bold">{props.children}</h4>;
     }
     if (props.schemaType.value === "blockquote") {
-      return <blockquote className="border-l-4 border-gray-300 pl-4 italic">{props.children}</blockquote>;
+      return (
+        <blockquote className="border-l-4 border-gray-300 pl-4 italic">
+          {props.children}
+        </blockquote>
+      );
     }
     return <>{props.children}</>;
   };
@@ -270,10 +278,10 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
 
     const toggleDecorator = (decorator: string) => {
       editor.send({
-        type: 'decorator.toggle',
+        type: "decorator.toggle",
         decorator: decorator,
       });
-      editor.send({ type: 'focus' });
+      editor.send({ type: "focus" });
     };
 
     // Note: In the current API, we can't easily check if a decorator is active
@@ -498,8 +506,7 @@ export default function PropertyForm({ mode, initialData }: PropertyFormProps) {
             </EditorProvider>
           </div>
           <div className="mt-2 text-sm text-gray-500">
-            Rich text editor supports headings, lists, links, and text
-            formatting. Press{" "}
+            Rich text editor supports text formatting. Press{" "}
             <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd>{" "}
             for new paragraphs.
           </div>
